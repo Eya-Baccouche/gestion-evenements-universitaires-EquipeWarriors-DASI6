@@ -1,0 +1,43 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: fidelite
+  config:
+    import: "optional:configserver:http://localhost:8888"
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/fidelite}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: 5672
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        auto-startup: ${RABBIT_LISTENER_ENABLED:true}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/events}
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+
+fidelite:
+  points:
+    inscription: 5
+    presence: 20
+    avis: 10
+  niveaux:
+    seuil-argent: 100
+    seuil-or: 300
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
