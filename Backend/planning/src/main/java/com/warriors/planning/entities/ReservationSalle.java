@@ -31,6 +31,11 @@ public class ReservationSalle {
     @JoinColumn(name = "salle_id", nullable = false)
     private Salle salle;
 
+    /** Table optionnelle — si null, réservation de la salle entière ; si set, réservation d'une table spécifique */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "table_id")
+    private TableSalle table;
+
     @NotBlank(message = "Le titre est obligatoire")
     @Size(max = 200, message = "Le titre ne doit pas dépasser 200 caractères")
     @Column(name = "titre", nullable = false, length = 200)

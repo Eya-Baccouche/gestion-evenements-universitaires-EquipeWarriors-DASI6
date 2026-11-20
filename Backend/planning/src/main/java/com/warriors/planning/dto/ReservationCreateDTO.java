@@ -21,6 +21,9 @@ public class ReservationCreateDTO {
     @NotNull(message = "La salle est obligatoire")
     private Long salleId;
 
+    /** Table optionnelle — si null, réservation de la salle entière ; si set, réservation d'une table */
+    private Long tableId;
+
     @NotBlank(message = "Le titre est obligatoire")
     @Size(max = 200, message = "Le titre ne doit pas dépasser 200 caractères")
     private String titre;

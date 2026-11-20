@@ -4,6 +4,7 @@ import com.warriors.planning.dto.ReservationCreateDTO;
 import com.warriors.planning.dto.ReservationDTO;
 import com.warriors.planning.entities.ReservationSalle;
 import com.warriors.planning.entities.Salle;
+import com.warriors.planning.entities.TableSalle;
 import com.warriors.planning.entities.enums.RoleDemandeur;
 import com.warriors.planning.entities.enums.StatutReservation;
 import com.warriors.planning.entities.enums.StatutSalle;
@@ -11,6 +12,7 @@ import com.warriors.planning.exceptions.BusinessException;
 import com.warriors.planning.exceptions.ResourceNotFoundException;
 import com.warriors.planning.repositories.ReservationSalleRepository;
 import com.warriors.planning.repositories.SalleRepository;
+import com.warriors.planning.repositories.TableSalleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ public class ReservationService {
 
     private final ReservationSalleRepository reservationRepository;
     private final SalleRepository salleRepository;
+    private final TableSalleRepository tableSalleRepository;
 
     // ================================================================
     // Lecture
@@ -102,7 +105,7 @@ public class ReservationService {
                             + salle.getStatut() + ")");
         }
 
-        // R-S4 : capacité suffisante
+        // R-S4 : capacité suffisante (salle)
         if (dto.getNombrePersonnes() > salle.getCapacite()) {
             throw new BusinessException(
                     "La salle '" + salle.getNom() + "' a une capacité de "
@@ -110,18 +113,51 @@ public class ReservationService {
                             + dto.getNombrePersonnes() + " personnes");
         }
 
-        // R-S1 : pas de chevauchement de créneau
+        // ---- Gestion de la table (optionnelle) ----
+        TableSalle table = null;
+        if (dto.getTableId() != null) {
+            table = tableSalleRepository.findById(dto.getTableId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Table introuvable avec l'id " + dto.getTableId()));
+
+            // R-T4 : la table doit appartenir à la salle choisie
+            if (!table.getSalle().getId().equals(salle.getId())) {
+                throw new BusinessException(
+                        "La table '" + table.getNumero() + "' n'appartient pas à la salle '"
+                                + salle.getNom() + "'");
+            }
+
+            // R-T5 : la table doit être DISPONIBLE
+            if (table.getStatut() != StatutSalle.DISPONIBLE) {
+                throw new BusinessException(
+                        "La table '" + table.getNumero() + "' n'est pas disponible (statut: "
+                                + table.getStatut() + ")");
+            }
+
+            // R-T6 : capacité de la table suffisante
+            if (dto.getNombrePersonnes() > table.getCapacite()) {
+                throw new BusinessException(
+                        "La table '" + table.getNumero() + "' a une capacité de "
+                                + table.getCapacite() + " personnes, insuffisante pour "
+                                + dto.getNombrePersonnes() + " personnes");
+            }
+        }
+
+        // R-S1 / R-T1 : pas de chevauchement (au niveau salle ou table)
         if (reservationRepository.existsChevauchement(
                 dto.getSalleId(), dto.getDateReservation(),
-                dto.getHeureDebut(), dto.getHeureFin(), null)) {
+                dto.getHeureDebut(), dto.getHeureFin(), null, dto.getTableId())) {
             throw new BusinessException(
-                    "Conflit de créneau : la salle '" + salle.getNom()
+                    "Conflit de créneau : " + (table != null
+                            ? "la table '" + table.getNumero()
+                            : "la salle '" + salle.getNom())
                             + "' est déjà réservée le " + dto.getDateReservation()
                             + " entre " + dto.getHeureDebut() + " et " + dto.getHeureFin());
         }
 
         ReservationSalle reservation = ReservationSalle.builder()
                 .salle(salle)
+                .table(table)
                 .titre(dto.getTitre())
                 .description(dto.getDescription())
                 .dateReservation(dto.getDateReservation())
@@ -176,15 +212,40 @@ public class ReservationService {
                             + " personnes max (demandé: " + dto.getNombrePersonnes() + ")");
         }
 
-        // R-S1 : on exclut la réservation courante du contrôle de chevauchement
+        // ---- Gestion de la table (optionnelle) ----
+        TableSalle table = null;
+        if (dto.getTableId() != null) {
+            table = tableSalleRepository.findById(dto.getTableId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Table introuvable avec l'id " + dto.getTableId()));
+            if (!table.getSalle().getId().equals(salle.getId())) {
+                throw new BusinessException(
+                        "La table '" + table.getNumero() + "' n'appartient pas à la salle '"
+                                + salle.getNom() + "'");
+            }
+            if (table.getStatut() != StatutSalle.DISPONIBLE) {
+                throw new BusinessException(
+                        "La table '" + table.getNumero() + "' n'est pas disponible");
+            }
+            if (dto.getNombrePersonnes() > table.getCapacite()) {
+                throw new BusinessException(
+                        "Capacité table insuffisante: " + table.getCapacite()
+                                + " (demandé: " + dto.getNombrePersonnes() + ")");
+            }
+        }
+
+        // R-S1 / R-T1 : on exclut la réservation courante
         if (reservationRepository.existsChevauchement(
                 dto.getSalleId(), dto.getDateReservation(),
-                dto.getHeureDebut(), dto.getHeureFin(), id)) {
+                dto.getHeureDebut(), dto.getHeureFin(), id, dto.getTableId())) {
             throw new BusinessException(
-                    "Conflit de créneau pour la salle '" + salle.getNom() + "'");
+                    "Conflit de créneau pour " + (table != null
+                            ? "la table '" + table.getNumero()
+                            : "la salle '" + salle.getNom()) + "'");
         }
 
         r.setSalle(salle);
+        r.setTable(table);
         r.setTitre(dto.getTitre());
         r.setDescription(dto.getDescription());
         r.setDateReservation(dto.getDateReservation());
@@ -231,9 +292,10 @@ public class ReservationService {
         }
 
         // Re-vérification du chevauchement (une autre réservation a pu être confirmée)
+        Long tableId = r.getTable() != null ? r.getTable().getId() : null;
         if (reservationRepository.existsChevauchement(
                 r.getSalle().getId(), r.getDateReservation(),
-                r.getHeureDebut(), r.getHeureFin(), id)) {
+                r.getHeureDebut(), r.getHeureFin(), id, tableId)) {
             throw new BusinessException(
                     "Conflit de créneau détecté : une autre réservation occupe déjà ce créneau");
         }

@@ -23,7 +23,7 @@ public interface ReservationSalleRepository extends JpaRepository<ReservationSal
 
     /**
      * Vérifie l'existence d'un chevauchement de créneau pour une salle donnée.
-     * Utilisé par la règle métier R-S1.
+     * Inclut les réservations de salle entière ET de tables dans cette salle (R-S1 + R-T1).
      */
     @Query("""
         SELECT COUNT(r) > 0 FROM ReservationSalle r
@@ -34,13 +34,15 @@ public interface ReservationSalleRepository extends JpaRepository<ReservationSal
           AND (:excludeId IS NULL OR r.id <> :excludeId)
           AND r.heureDebut < :heureFin
           AND r.heureFin   > :heureDebut
+          AND (:tableId IS NULL OR r.table IS NULL OR r.table.id = :tableId)
     """)
     boolean existsChevauchement(
             @Param("salleId") Long salleId,
             @Param("date") LocalDate date,
             @Param("heureDebut") java.time.LocalTime heureDebut,
             @Param("heureFin") java.time.LocalTime heureFin,
-            @Param("excludeId") Long excludeId);
+            @Param("excludeId") Long excludeId,
+            @Param("tableId") Long tableId);
 
     /**
      * Réservations d'une salle sur une période (planning).

@@ -22,6 +22,8 @@ public class ReservationDTO {
     private Long id;
     private Long salleId;
     private String salleNom;
+    private Long tableId;
+    private String tableNumero;
     private String batimentNom;
     private String titre;
     private String description;
@@ -43,6 +45,8 @@ public class ReservationDTO {
                 .id(r.getId())
                 .salleId(r.getSalle() != null ? r.getSalle().getId() : null)
                 .salleNom(r.getSalle() != null ? r.getSalle().getNom() : null)
+                .tableId(r.getTable() != null ? r.getTable().getId() : null)
+                .tableNumero(r.getTable() != null ? r.getTable().getNumero() : null)
                 .batimentNom(r.getSalle() != null && r.getSalle().getBatiment() != null
                         ? r.getSalle().getBatiment().getNom() : null)
                 .titre(r.getTitre())

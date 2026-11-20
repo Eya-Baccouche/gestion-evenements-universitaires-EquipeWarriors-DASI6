@@ -21,11 +21,28 @@ INSERT INTO salle (nom, type_salle, capacite, etage, batiment_id, equipements, s
 ('Salle 105',    'SALLE_COURS',  35,  1, 3, 'tableau',                                         'FERME',         'Fermée pour rénovation'),
 ('Labo Chimie',  'LABORATOIRE',  20,  2, 3, 'hotte, matériel chimie',                          'DISPONIBLE',    'Laboratoire de chimie');
 
--- ---- Réservations ----
-INSERT INTO reservation_salle (salle_id, titre, description, date_reservation, heure_debut, heure_fin, statut, demande_par, role_demandeur, evenement_id, nombre_personnes)
+-- ---- Tables individuelles (dans les salles) ----
+INSERT INTO table_salle (numero, capacite, salle_id, statut, description) VALUES
+('T1', 4, 2, 'DISPONIBLE', 'Table près de la fenêtre'),
+('T2', 4, 2, 'DISPONIBLE', 'Table centrale'),
+('T3', 6, 2, 'DISPONIBLE', 'Table du fond'),
+('T1', 4, 3, 'DISPONIBLE', 'Table salle 102'),
+('T1', 4, 7, 'DISPONIBLE', 'Table salle 201'),
+('T2', 4, 7, 'EN_MAINTENANCE', 'Table en réparation'),
+('T1', 3, 8, 'DISPONIBLE', 'Table salle de réunion'),
+('T2', 3, 8, 'DISPONIBLE', 'Table salle de réunion'),
+('T1', 2, 10, 'DISPONIBLE', 'Paillasse labo chimie 1'),
+('T2', 2, 10, 'DISPONIBLE', 'Paillasse labo chimie 2');
+
+-- ---- Réservations (salle entière ou table spécifique) ----
+INSERT INTO reservation_salle (salle_id, table_id, titre, description, date_reservation, heure_debut, heure_fin, statut, demande_par, role_demandeur, evenement_id, nombre_personnes)
 VALUES
-(1, 'Conférence IA', 'Conférence intro intelligence artificielle', CURRENT_DATE + 2, '09:00', '12:00', 'CONFIRMEE',  'organisateur1@univ.fr', 'ORGANISATEUR', 101, 280),
-(2, 'Cours Algo',     'TD Algorithmique avancée',                   CURRENT_DATE + 1, '08:30', '10:00', 'CONFIRMEE',  'organisateur2@univ.fr', 'ORGANISATEUR', 102, 55),
-(6, 'Soutenance PFE', 'Soutenances projets de fin d''études',        CURRENT_DATE + 3, '14:00', '18:00', 'EN_ATTENTE',  'organisateur3@univ.fr', 'ORGANISATEUR', 103, 180),
-(7, 'Réunion jury',   'Réunion du jury d''admission',                CURRENT_DATE + 1, '10:00', '12:30', 'CONFIRMEE',  'admin1@univ.fr',        'ADMIN',        NULL, 45),
-(8, 'Brainstorm',     'Atelier brainstorming département',          CURRENT_DATE + 2, '13:00', '15:00', 'EN_ATTENTE',  'organisateur1@univ.fr', 'ORGANISATEUR', NULL, 12);
+(1, NULL, 'Conférence IA', 'Conférence intro intelligence artificielle', CURRENT_DATE + 2, '09:00', '12:00', 'CONFIRMEE',  'organisateur1@univ.fr', 'ORGANISATEUR', 101, 280),
+(2, NULL, 'Cours Algo',     'TD Algorithmique avancée',                   CURRENT_DATE + 1, '08:30', '10:00', 'CONFIRMEE',  'organisateur2@univ.fr', 'ORGANISATEUR', 102, 55),
+(6, NULL, 'Soutenance PFE', 'Soutenances projets de fin d''études',        CURRENT_DATE + 3, '14:00', '18:00', 'EN_ATTENTE',  'organisateur3@univ.fr', 'ORGANISATEUR', 103, 180),
+(7, NULL, 'Réunion jury',   'Réunion du jury d''admission',                CURRENT_DATE + 1, '10:00', '12:30', 'CONFIRMEE',  'admin1@univ.fr',        'ADMIN',        NULL, 45),
+(8, NULL, 'Brainstorm',     'Atelier brainstorming département',          CURRENT_DATE + 2, '13:00', '15:00', 'EN_ATTENTE',  'organisateur1@univ.fr', 'ORGANISATEUR', NULL, 12),
+-- Réservations de tables individuelles
+(8, 7,  'Réunion projet',  'Travail de groupe table T1',  CURRENT_DATE + 4, '09:00', '11:00', 'EN_ATTENTE',  'organisateur1@univ.fr', 'ORGANISATEUR', NULL, 3),
+(8, 8,  'Tutorat',          'Session tutorat table T2',   CURRENT_DATE + 4, '09:00', '11:00', 'CONFIRMEE',  'organisateur2@univ.fr', 'ORGANISATEUR', NULL, 3),
+(3, 4,  'TP BDD',           'TP bases de données table T1', CURRENT_DATE + 5, '14:00', '16:00', 'EN_ATTENTE', 'organisateur3@univ.fr', 'ORGANISATEUR', NULL, 4);
