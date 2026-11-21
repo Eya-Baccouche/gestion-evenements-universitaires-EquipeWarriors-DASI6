@@ -45,4 +45,18 @@ public class AvisService {
     public List<Avis> getAvisForEvenement(Long evenementId) {
         return avisRepository.findByEvenementId(evenementId);
     }
+
+    public Avis updateAvis(Long avisId, Avis updates) {
+        Avis existing = avisRepository.findById(avisId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Avis introuvable"));
+        existing.setNote(updates.getNote());
+        existing.setCommentaire(updates.getCommentaire());
+        return avisRepository.save(existing);
+    }
+
+    public void deleteAvis(Long avisId) {
+        if (!avisRepository.existsById(avisId))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Avis introuvable");
+        avisRepository.deleteById(avisId);
+    }
 }

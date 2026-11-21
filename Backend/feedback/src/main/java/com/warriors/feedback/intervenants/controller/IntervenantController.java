@@ -29,8 +29,35 @@ public class IntervenantController {
         return ResponseEntity.status(HttpStatus.CREATED).body(intervenantService.affecter(affectation));
     }
 
+    @GetMapping("/speakers")
+    public List<Intervenant> getAllIntervenants() {
+        return intervenantService.getAllIntervenants();
+    }
+
+    @GetMapping("/speakers/{id}")
+    public Intervenant getIntervenant(@PathVariable("id") Long id) {
+        return intervenantService.getIntervenant(id);
+    }
+
+    @PutMapping("/speakers/{id}")
+    public Intervenant updateIntervenant(@PathVariable("id") Long id, @Valid @RequestBody Intervenant intervenant) {
+        return intervenantService.updateIntervenant(id, intervenant);
+    }
+
+    @DeleteMapping("/speakers/{id}")
+    public ResponseEntity<Void> deleteIntervenant(@PathVariable("id") Long id) {
+        intervenantService.deleteIntervenant(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/speakers/{id}/assignments")
     public List<Affectation> getAffectations(@PathVariable("id") Long intervenantId) {
         return intervenantService.getAffectations(intervenantId);
+    }
+
+    @DeleteMapping("/assignments/{id}")
+    public ResponseEntity<Void> deleteAffectation(@PathVariable("id") Long id) {
+        intervenantService.deleteAffectation(id);
+        return ResponseEntity.noContent().build();
     }
 }

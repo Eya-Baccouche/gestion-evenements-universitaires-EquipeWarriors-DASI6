@@ -47,4 +47,33 @@ public class IntervenantService {
     public List<Affectation> getAffectations(Long intervenantId) {
         return affectationRepository.findByIntervenantId(intervenantId);
     }
+
+    public List<Intervenant> getAllIntervenants() {
+        return intervenantRepository.findAll();
+    }
+
+    public Intervenant getIntervenant(Long id) {
+        return intervenantRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Intervenant introuvable"));
+    }
+
+    public Intervenant updateIntervenant(Long id, Intervenant updates) {
+        Intervenant existing = getIntervenant(id);
+        existing.setNom(updates.getNom());
+        existing.setFonction(updates.getFonction());
+        existing.setDisponibilites(updates.getDisponibilites());
+        return intervenantRepository.save(existing);
+    }
+
+    public void deleteIntervenant(Long id) {
+        if (!intervenantRepository.existsById(id))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Intervenant introuvable");
+        intervenantRepository.deleteById(id);
+    }
+
+    public void deleteAffectation(Long affectationId) {
+        if (!affectationRepository.existsById(affectationId))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Affectation introuvable");
+        affectationRepository.deleteById(affectationId);
+    }
 }
