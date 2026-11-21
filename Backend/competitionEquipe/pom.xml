@@ -12,9 +12,9 @@
     </parent>
     
     <groupId>com.esprit</groupId>
-    <artifactId>competitions</artifactId>
+    <artifactId>competitionEquipe</artifactId>
     <version>1.0.0</version>
-    <name>competitions</name>
+    <name>competitionEquipe</name>
     <description>Microservice Compétitions et Hackathons - Gestion Événements Universitaires</description>
     
     <properties>
