@@ -33,9 +33,14 @@ public class Evenement {
     private TypeEvenement type;
 
     @Column(nullable = false)
-    private LocalDateTime date;
+    private LocalDateTime dateDebut;
+
+    @Column(nullable = false)
+    private LocalDateTime dateFin;
 
     private Long salleId;
+
+    private Long organisateurId;
 
     @Column(nullable = false)
     private Integer capacite;
@@ -44,13 +49,26 @@ public class Evenement {
     @Column(nullable = false)
     private StatutEvenement statut;
 
-    @OneToMany(mappedBy = "evenement", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Column(nullable = false)
+    private Boolean materielRestitue = false;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "detail_id")
+    private DetailEvenement detail;
+
+    @OneToMany(mappedBy = "evenement", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<SessionProgramme> programme = new ArrayList<>();
+
+    @OneToMany(mappedBy = "evenement", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Inscription> inscriptions = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
         if (statut == null) {
             statut = StatutEvenement.BROUILLON;
+        }
+        if (materielRestitue == null) {
+            materielRestitue = false;
         }
     }
 }

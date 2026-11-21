@@ -1,0 +1,84 @@
+@startuml diagramme_sequence_interactions
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+actor "Organisateur" as Org
+participant "Événements\n(Eya)" as EV
+database "MySQL\n(evenements_db)" as BDD
+participant "Planning\n(Amal)" as PL
+queue "RabbitMQ\n(Exchange: evenements)" as MQ
+participant "Notifications\n(Hana)" as NT
+participant "Check-in\n(Rayen)" as CK
+participant "Statistiques\n(Eya B.)" as ST
+participant "Feedback\n(Youssef)" as FB
+
+== 1. Publication d'un événement (Synchrone puis Asynchrone) ==
+
+Org -> EV : PUT /events/{id}/publish
+EV -> BDD : Vérifier événement (BROUILLON)
+
+note over EV, PL #LightCyan
+  APPEL SYNCHRONE (OpenFeign)
+  L'événement NE PEUT PAS être publié sans accord de Planning
+end note
+
+EV -> PL : POST /reservations { salleId, date, capacite }
+
+alt Salle réservée avec succès (201 Created)
+    PL --> EV : 201 Created
+    EV -> BDD : UPDATE evenements SET statut = 'PUBLIE'
+    EV --> Org : 200 OK (Événement publié)
+    
+    note over EV, MQ #LightGreen
+      DIFFUSION ASYNCHRONE (RabbitMQ)
+    end note
+    EV -> MQ : Publie "evenement.publie" { evenementId, titre, date, salleId }
+    MQ -> NT : Notifier les étudiants
+    MQ -> ST : Initialiser métriques
+else Conflit ou Planning indisponible (409 Conflict)
+    PL --> EV : 409 Conflict / Erreur
+    note over EV : L'événement RESTE au statut BROUILLON
+    EV --> Org : 409 Conflict ("Réservation impossible")
+end
+
+== 2. Inscription d'un participant (Asynchrone vers Check-in / Notifs) ==
+
+actor "Participant" as Part
+Part -> EV : POST /events/{id}/registrations { participantId }
+EV -> BDD : Vérifier capacité (verrou PESSIMISTIC_WRITE)
+
+alt Capacité disponible
+    EV -> BDD : INSERT INTO inscriptions (CONFIRMEE)
+    EV --> Part : 201 Created (Inscription confirmée)
+    
+    EV -> MQ : Publie "inscription.confirmee" { inscriptionId, evenementId, participantId, date }
+    MQ -> CK : Générer Badge QR code unique
+    MQ -> NT : Envoyer email de confirmation
+    MQ -> ST : Mettre à jour l'affluence
+else Capacité atteinte
+    EV --> Part : 409 Conflict ("Complet")
+end
+
+== 3. Annulation d'un événement (Asynchrone vers Planning / Notifs) ==
+
+Org -> EV : PUT /events/{id}/cancel
+EV -> BDD : UPDATE evenements SET statut = 'ANNULE'
+EV --> Org : 200 OK (Événement annulé)
+
+EV -> MQ : Publie "evenement.annule" { evenementId }
+MQ -> PL : Libérer immédiatement le créneau de la salle
+MQ -> NT : Envoyer email d'annulation aux participants
+MQ -> CK : Révoquer les badges QR
+
+== 4. Clôture d'un événement (Asynchrone vers Feedback) ==
+
+note over EV : Date dépassée -> Statut TERMINE
+EV -> BDD : UPDATE evenements SET statut = 'TERMINE'
+EV -> MQ : Publie "evenement.termine" { evenementId }
+MQ -> FB : Ouvrir formulaire d'avis et notation
+MQ -> NT : Rappel pour donner son avis
+MQ -> ST : Calculer taux de présence final
+
+@enduml
+

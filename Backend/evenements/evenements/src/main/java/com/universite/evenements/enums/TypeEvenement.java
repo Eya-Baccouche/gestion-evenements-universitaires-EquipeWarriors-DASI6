@@ -2,8 +2,9 @@ package com.universite.evenements.enums;
 
 public enum TypeEvenement {
     CONFERENCE,
-    HACKATHON,
-    SOUTENANCE,
+    ATELIER,
     SEMINAIRE,
-    ATELIER
+    FORUM,
+    HACKATHON,
+    SOUTENANCE
 }

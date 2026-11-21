@@ -1,6 +1,7 @@
 package com.universite.evenements.entity;
 
 import com.universite.evenements.enums.StatutInscription;
+import com.universite.evenements.util.QrCodeSecurityUtil;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,6 +42,14 @@ public class Inscription {
     @Column(nullable = false)
     private LocalDateTime date;
 
+    @Column(unique = true, length = 64)
+    private String qrCode;
+
+    @Column(nullable = false)
+    private Boolean present = false;
+
+    private LocalDateTime dateCheckIn;
+
     @PrePersist
     public void prePersist() {
         if (date == null) {
@@ -48,6 +57,12 @@ public class Inscription {
         }
         if (statut == null) {
             statut = StatutInscription.CONFIRMEE;
+        }
+        if (present == null) {
+            present = false;
+        }
+        if (qrCode == null && evenement != null && participantId != null) {
+            qrCode = QrCodeSecurityUtil.genererCodeHache(evenement.getId(), participantId);
         }
     }
 }
