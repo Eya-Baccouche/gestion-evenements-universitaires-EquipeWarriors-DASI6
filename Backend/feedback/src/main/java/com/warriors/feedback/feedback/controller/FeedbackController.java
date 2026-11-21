@@ -28,4 +28,15 @@ public class FeedbackController {
     public List<Avis> getAvis(@PathVariable("id") Long evenementId) {
         return avisService.getAvisForEvenement(evenementId);
     }
+
+    @PutMapping("/{avisId}")
+    public Avis updateAvis(@PathVariable("avisId") Long avisId, @Valid @RequestBody Avis avis) {
+        return avisService.updateAvis(avisId, avis);
+    }
+
+    @DeleteMapping("/{avisId}")
+    public ResponseEntity<Void> deleteAvis(@PathVariable("avisId") Long avisId) {
+        avisService.deleteAvis(avisId);
+        return ResponseEntity.noContent().build();
+    }
 }
