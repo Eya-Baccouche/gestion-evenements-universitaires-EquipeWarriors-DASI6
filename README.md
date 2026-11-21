@@ -1,51 +1,59 @@
-# Gestion des événements universitaires
+# Gestion des Événements Universitaires
 
-Projet AWD 2026-2027 — Équipe Warriors (DASI 6)
+> **Module :** Architecture Web Distribuée (AWD) — ESPRIT 4DAS6 (2026-2027)
+> **Équipe :** Warriors (Eya Ben Saber · Eya Baccouche · Rayen Amri · Youssef Saibi · Hana Abidi · Amal Barhoumi)
 
-## Membres et microservices
+---
 
-| Membre | Microservice | Port | Base de données |
-|--------|-------------|------|-----------------|
-| Eya Ben Saber | api-gateway + evenements | 8080 / 8081 | MySQL |
-| Eya Baccouche | statistiques | 8085 | PostgreSQL |
-| Rayen Amri | checkin + eureka-server | 8083 / 8761 | MySQL |
-| Youssef Saibi | feedback + config-server | 8084 / 8888 | PostgreSQL |
-| Hana Abidi | notifications | 8086 | MongoDB |
-| Amal Barhoumi | planning | 8082 | PostgreSQL |
+## 1. Présentation du Projet
 
-## Architecture
+Plateforme web distribuée permettant de gérer l'intégralité du cycle de vie des événements universitaires (conférences, hackathons, salons partenaires et compétitions) : réservation des espaces, démarchage de sponsors, formation d'équipes (Smart Matching), logistique matérielle et programme de fidélité.
 
-```
-Frontend (Angular)
-      │
-      ▼
-API Gateway (8080)
-      │
-      ├── Eureka Server (8761) — service discovery
-      ├── Config Server (8888) — configuration centralisée
-      │
-      ├── Événements      (8081) — MySQL
-      ├── Feedback        (8084) — PostgreSQL
-      ├── Planning        (8082) — PostgreSQL
-      ├── Check-in        (8083) — MySQL
-      ├── Notifications   (8086) — MongoDB
-      └── Statistiques    (8085) — PostgreSQL
-```
+---
 
-Stack : Spring Boot 4.x · Spring Cloud · OpenFeign · Eureka · Config Server · Keycloak · Swagger/OpenAPI
+## 2. Découpage en 7 Microservices
 
-## Démarrage
+L'architecture repose sur le pattern *Database-per-Service* avec une persistance polyglotte (MySQL, PostgreSQL, MongoDB) :
 
-1. Lancer **Eureka Server** (port 8761)
-2. Lancer **Config Server** (port 8888)
-3. Lancer les microservices dans n'importe quel ordre
-4. Accéder au **Frontend** Angular
+| Microservice                        | Responsable                | Stack Backend              |   Base de Données   | Rôle Clé                                                                 |
+| ----------------------------------- | -------------------------- | -------------------------- | :------------------: | -------------------------------------------------------------------------- |
+| **Événements** *(Pivot)*  | Eya Ben Saber              | Spring Boot                |   **MySQL**   | Cycle de vie des événements et contrôle des jauges d'inscription.       |
+| **Compétitions & Équipes**  | Eya Baccouche              | Spring Boot                | **PostgreSQL** | Hackathons, équipes, Smart Matching solo et notation des projets.         |
+| **Sponsors & Partenariats**   | Rayen Amri                 | Spring Boot                |   **MySQL**   | Packs partenaires, conventions et démarchage bilatéral.                  |
+| **Feedback & Intervenants**   | Youssef Saibi              | Spring Boot                | **PostgreSQL** | Disponibilités des speakers/jurys, affectations et recueil des avis.      |
+| **Fidélité & Récompenses** | Hana Abidi                 | Spring Boot                |  **MongoDB**  | Gamification, historique des points d'engagement NoSQL et badges.          |
+| **Planning des salles**       | Amal Barhoumi              | Spring Boot                | **PostgreSQL** | Réservations d'espaces et détection des conflits horaires (`tsrange`). |
+| **Logistique & Équipements** | **Équipe (Commun)** | **Python (FastAPI)** | **PostgreSQL** | Gestion du stock matériel partagé (kits IoT, micros) et des stands.      |
 
-## Microservice Feedback (Youssef Saibi)
+---
 
-**Port :** 8084  
-**Base :** PostgreSQL — `feedbackdb`  
-**Branche :** `feature/feedback`
+## 3. Socle Commun d'Infrastructure
+
+* **API Gateway :** Spring Cloud Gateway (point d'entrée unique, routage dynamique et CORS).
+* **Service Registry :** Netflix Eureka Server (annuaire dynamique des 7 microservices).
+* **Config Server :** Spring Cloud Config Server (centralisation des configurations applicatives).
+* **Sécurité & IAM :** Keycloak (authentification OAuth2 / OpenID Connect, tokens JWT et rôles RBAC).
+* **Message Broker :** RabbitMQ (Exchange Topic `evenements.topic` pour les flux asynchrones).
+* **Front-end :** Application web unique développée avec React (Vite).
+* **Conteneurisation :** Docker & Docker Compose pour orchestrer l'ensemble des conteneurs.
+
+---
+
+## 4. Diagrammes du Projet
+
+Tous les diagrammes de conception sont directement accessibles ci-dessous :
+
+* [Architecture Technique](Documentation/Diagrams/architecture-technique.png) — *Vue globale des composants, de la Gateway, d'Eureka, de Keycloak et de RabbitMQ*
+* [Diagramme de Classes Global](Documentation/Diagrams/class-diagram.png) — *Modèle conceptuel métier des entités et relations*
+* [Diagramme de Cas d'Utilisation](Documentation/Diagrams/Use_Case.png) — *Les 5 acteurs et leurs interactions avec la plateforme*
+* [Communications Synchrones](Documentation/Diagrams/communications-synchrones.png) — *Détail des 5 appels REST inter-services (OpenFeign)*
+* [Communications Asynchrones](Documentation/Diagrams/communications-asynchrones.png) — *Détail des 6 événements publiés et consommés (RabbitMQ)*
+
+---
+
+## 5. Microservice Feedback & Intervenants (Youssef Saibi)
+
+**Port :** 8084 | **Base :** PostgreSQL (`feedbackdb`) | **Branche :** `feature/feedback`
 
 ### Endpoints
 
@@ -67,10 +75,11 @@ Stack : Spring Boot 4.x · Spring Cloud · OpenFeign · Eureka · Config Server 
 
 ### Communication inter-services
 
-- Feign client vers **Événements** (port 8081) pour vérifier l'existence d'un événement avant affectation
-- Fallback automatique si Événements est hors-ligne (réponse 503)
+- OpenFeign vers **Événements** (port 8081) pour vérifier l'existence d'un événement
+- RabbitMQ : publie un événement `avis.depose` sur `feedback.exchange` après chaque avis déposé
 
-## Documentation
+### Diagrammes
 
-- `Documentation/Diagrams/usecase_feedback.png` — diagramme de cas d'utilisation
-- `Documentation/Diagrams/sequence_feedback.png` — diagramme de séquence (3 scénarios)
+- `Documentation/Diagrams/usecase_feedback.png` — cas d'utilisation
+- `Documentation/Diagrams/sequence_feedback.png` — séquence (3 scénarios)
+- `Documentation/Diagrams/classes_feedback.png` — diagramme de classes
