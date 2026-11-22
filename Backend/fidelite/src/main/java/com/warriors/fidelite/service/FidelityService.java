@@ -39,16 +39,16 @@ public class FidelityService {
     private final RecompenseRepository recompenseRepository;
     private final MongoTemplate mongoTemplate;
 
-    @Value("${fidelite.points.inscription:5}")
-    private int pointsInscription;
-    @Value("${fidelite.points.presence:20}")
-    private int pointsPresence;
-    @Value("${fidelite.points.avis:10}")
+    @Value("${fidelite.points.participation:50}")
+    private int pointsParticipation;
+    @Value("${fidelite.points.avis:20}")
     private int pointsAvis;
-    @Value("${fidelite.niveaux.seuil-argent:100}")
-    private int seuilArgent;
-    @Value("${fidelite.niveaux.seuil-or:300}")
-    private int seuilOr;
+    @Value("${fidelite.points.victoire-hackathon:300}")
+    private int pointsVictoire;
+    @Value("${fidelite.niveaux.seuil-silver:200}")
+    private int seuilSilver;
+    @Value("${fidelite.niveaux.seuil-gold:500}")
+    private int seuilGold;
 
     // ------------------------------------------------------------------
     // Regles
@@ -56,16 +56,16 @@ public class FidelityService {
 
     public int pointsPour(ActionFidelite action) {
         return switch (action) {
-            case INSCRIPTION -> pointsInscription;
-            case PRESENCE -> pointsPresence;
+            case PARTICIPATION -> pointsParticipation;
             case AVIS -> pointsAvis;
+            case VICTOIRE_HACKATHON -> pointsVictoire;
             case ECHANGE -> throw new IllegalArgumentException("ECHANGE n'a pas de bareme fixe");
         };
     }
 
     public NiveauFidelite niveauPour(int points) {
-        if (points >= seuilOr) return NiveauFidelite.OR;
-        if (points >= seuilArgent) return NiveauFidelite.ARGENT;
+        if (points >= seuilGold) return NiveauFidelite.GOLD;
+        if (points >= seuilSilver) return NiveauFidelite.SILVER;
         return NiveauFidelite.BRONZE;
     }
 

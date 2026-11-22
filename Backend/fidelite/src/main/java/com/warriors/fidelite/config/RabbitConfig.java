@@ -15,6 +15,13 @@ public class RabbitConfig {
     public static final String EXCHANGE = "evenements";
     public static final String QUEUE = "fidelite.queue";
 
+    /** Participation a un evenement : +50 points. */
+    public static final String KEY_PARTICIPATION = "presence.enregistree";
+    /** Avis depose : +20 points. */
+    public static final String KEY_AVIS = "avis.envoye";
+    /** Victoire a un hackathon (service Competitions) : +300 points. */
+    public static final String KEY_VICTOIRE = "competition.gagnee";
+
     @Bean
     TopicExchange evenementsExchange() {
         return new TopicExchange(EXCHANGE);
@@ -27,10 +34,10 @@ public class RabbitConfig {
 
     @Bean
     Declarables fideliteBindings(Queue fideliteQueue, TopicExchange evenementsExchange) {
-        Binding inscription = BindingBuilder.bind(fideliteQueue).to(evenementsExchange).with("inscription.confirmee");
-        Binding presence = BindingBuilder.bind(fideliteQueue).to(evenementsExchange).with("presence.enregistree");
-        Binding avis = BindingBuilder.bind(fideliteQueue).to(evenementsExchange).with("avis.envoye");
-        return new Declarables(inscription, presence, avis);
+        Binding participation = BindingBuilder.bind(fideliteQueue).to(evenementsExchange).with(KEY_PARTICIPATION);
+        Binding avis = BindingBuilder.bind(fideliteQueue).to(evenementsExchange).with(KEY_AVIS);
+        Binding victoire = BindingBuilder.bind(fideliteQueue).to(evenementsExchange).with(KEY_VICTOIRE);
+        return new Declarables(participation, avis, victoire);
     }
 
     @Bean

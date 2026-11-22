@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 /**
  * Historique des gains et des depenses de points.
  *
- * Anti-doublon : pour INSCRIPTION, PRESENCE et AVIS, l'identifiant est deterministe
+ * Anti-doublon : pour PARTICIPATION, AVIS et VICTOIRE_HACKATHON, l'identifiant est deterministe
  * (participantId_evenementId_ACTION), donc MongoDB refuse un 2e gain identique.
  * Pour ECHANGE, l'identifiant est genere automatiquement.
  */

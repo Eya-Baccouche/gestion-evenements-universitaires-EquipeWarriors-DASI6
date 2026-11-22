@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
         title = "API Fidelite et recompenses",
         version = "1.0",
         description = "Microservice Fidelite et recompenses (gamification) - Equipe Warriors. "
-                + "Points, niveaux BRONZE/ARGENT/OR, classement et echange de recompenses."))
+                + "Points, niveaux BRONZE/SILVER/GOLD, classement et echange de recompenses."))
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
 public class OpenApiConfig {
 }

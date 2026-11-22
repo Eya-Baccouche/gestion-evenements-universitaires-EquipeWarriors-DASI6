@@ -10,6 +10,8 @@ import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -26,9 +28,9 @@ public class EvenementListener {
         log.info("Evenement recu : {} {}", routingKey, payload);
 
         ActionFidelite action = switch (routingKey) {
-            case "inscription.confirmee" -> ActionFidelite.INSCRIPTION;
-            case "presence.enregistree" -> ActionFidelite.PRESENCE;
-            case "avis.envoye" -> ActionFidelite.AVIS;
+            case RabbitConfig.KEY_PARTICIPATION -> ActionFidelite.PARTICIPATION;
+            case RabbitConfig.KEY_AVIS -> ActionFidelite.AVIS;
+            case RabbitConfig.KEY_VICTOIRE -> ActionFidelite.VICTOIRE_HACKATHON;
             default -> null;
         };
         if (action == null) {
@@ -37,13 +39,28 @@ public class EvenementListener {
         }
 
         try {
-            String participantId = texte(payload, "participantId");
             Long evenementId = Long.valueOf(texte(payload, "evenementId"));
-            service.gagnerPoints(participantId, evenementId, action);
+            // Une victoire concerne toute l'equipe : liste participantIds. Sinon un seul participantId.
+            for (String participantId : participants(payload)) {
+                service.gagnerPoints(participantId, evenementId, action);
+            }
         } catch (RuntimeException e) {
             // On ne relance pas l'exception : un message invalide ne doit pas boucler dans la file.
             log.error("Message ignore ({}) : {}", routingKey, e.getMessage());
         }
+    }
+
+    private List<String> participants(Map<String, Object> payload) {
+        List<String> resultat = new ArrayList<>();
+        if (payload.get("participantIds") instanceof List<?> liste) {
+            for (Object o : liste) {
+                if (o != null && !String.valueOf(o).isBlank()) resultat.add(String.valueOf(o));
+            }
+        }
+        if (resultat.isEmpty()) {
+            resultat.add(texte(payload, "participantId"));
+        }
+        return resultat;
     }
 
     private String texte(Map<String, Object> payload, String cle) {

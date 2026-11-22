@@ -19,6 +19,12 @@ public class Recompense {
 
     private String nom;
 
+    /** SWEAT, GOODIES ou CERTIFICATION. */
+    private CategorieRecompense categorie;
+
+    /** Entreprise partenaire qui offre la recompense (optionnel, ex: bons de certification). */
+    private String partenaire;
+
     /** Nombre de points necessaires pour obtenir la recompense. */
     private int coutPoints;
 
