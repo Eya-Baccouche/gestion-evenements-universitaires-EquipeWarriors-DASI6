@@ -2,6 +2,7 @@ package com.warriors.fidelite.controller;
 
 import com.warriors.fidelite.dto.EchangeResponse;
 import com.warriors.fidelite.dto.RecompenseRequest;
+import com.warriors.fidelite.model.CategorieRecompense;
 import com.warriors.fidelite.model.Recompense;
 import com.warriors.fidelite.service.FidelityService;
 import com.warriors.fidelite.service.RecompenseService;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,10 +37,10 @@ public class RewardController {
     private final RecompenseService recompenseService;
     private final FidelityService fidelityService;
 
-    @Operation(summary = "Catalogue des recompenses (200)")
+    @Operation(summary = "Catalogue des recompenses, filtre optionnel par categorie SWEAT, GOODIES ou CERTIFICATION (200)")
     @GetMapping
-    public List<Recompense> catalogue() {
-        return recompenseService.lister();
+    public List<Recompense> catalogue(@RequestParam(required = false) CategorieRecompense categorie) {
+        return recompenseService.lister(categorie);
     }
 
     @Operation(summary = "Creer une recompense (201 / 400 / 403) - Admin")
