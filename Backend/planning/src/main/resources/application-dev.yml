@@ -1,7 +1,7 @@
 # Profil de démonstration — H2 en mémoire (sans PostgreSQL)
 # Usage : mvn spring-boot:run -Dspring-boot.run.profiles=dev
 server:
-  port: 8085
+  port: 8082
 
 spring:
   application:
