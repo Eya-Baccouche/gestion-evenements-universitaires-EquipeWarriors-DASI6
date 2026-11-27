@@ -45,6 +45,41 @@ Tous les diagrammes de conception sont directement accessibles ci-dessous :
 
 * [Architecture Technique](Documentation/Diagrams/architecture-technique.png) — *Vue globale des composants, de la Gateway, d'Eureka, de Keycloak et de RabbitMQ*
 * [Diagramme de Classes Global](Documentation/Diagrams/class-diagram.png) — *Modèle conceptuel métier des entités et relations*
-* [Diagramme de Cas d&#39;Utilisation](Documentation/Diagrams/Use_Case.png) — *Les 5 acteurs et leurs interactions avec la plateforme*
+* [Diagramme de Cas d'Utilisation](Documentation/Diagrams/Use_Case.png) — *Les 5 acteurs et leurs interactions avec la plateforme*
 * [Communications Synchrones](Documentation/Diagrams/communications-synchrones.png) — *Détail des 5 appels REST inter-services (OpenFeign)*
 * [Communications Asynchrones](Documentation/Diagrams/communications-asynchrones.png) — *Détail des 6 événements publiés et consommés (RabbitMQ)*
+
+---
+
+## 5. Microservice Feedback & Intervenants (Youssef Saibi)
+
+**Port :** 8084 | **Base :** PostgreSQL (`feedbackdb`) | **Branche :** `feature/feedback`
+
+### Endpoints
+
+| Méthode | URL | Description |
+|---------|-----|-------------|
+| POST | `/events/{id}/feedback` | Déposer un avis |
+| GET | `/events/{id}/feedback` | Lister les avis d'un événement |
+| POST | `/speakers` | Créer un intervenant |
+| POST | `/assignments` | Affecter un intervenant à un événement |
+| GET | `/speakers/{id}/assignments` | Voir les affectations d'un intervenant |
+
+**Swagger UI :** http://localhost:8084/swagger-ui/index.html
+
+### Entités
+
+- `Avis` — avis d'un participant sur un événement (note, commentaire)
+- `Intervenant` — intervenant externe (nom, fonction, disponibilités)
+- `Affectation` — lien intervenant ↔ événement avec rôle (CONFERENCIER / JURY)
+
+### Communication inter-services
+
+- OpenFeign vers **Événements** (port 8081) pour vérifier l'existence d'un événement
+- RabbitMQ : publie un événement `avis.depose` sur `feedback.exchange` après chaque avis déposé
+
+### Diagrammes
+
+- `Documentation/Diagrams/usecase_feedback.png` — cas d'utilisation
+- `Documentation/Diagrams/sequence_feedback.png` — séquence (3 scénarios)
+- `Documentation/Diagrams/classes_feedback.png` — diagramme de classes
