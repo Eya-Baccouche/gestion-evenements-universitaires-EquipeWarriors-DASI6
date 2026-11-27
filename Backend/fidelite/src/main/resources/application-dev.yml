@@ -1,0 +1,12 @@
+# Profil "dev" : test local sans Keycloak, sans Eureka et (par defaut) sans RabbitMQ.
+# Activer avec : SPRING_PROFILES_ACTIVE=dev
+eureka:
+  client:
+    enabled: false
+
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        # mettre RABBIT_LISTENER_ENABLED=true quand RabbitMQ est lance
+        auto-startup: ${RABBIT_LISTENER_ENABLED:false}
